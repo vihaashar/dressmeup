@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DressMeUp: Outfit & Fit Suggester</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2em auto; padding: 1em; background: #faf7f3; }
+    h1 { color: #b85c9e; }
+    label { display: block; margin-top: 1em; }
+    input[type="text"], input[type="number"], select { width: 60%; margin: 0.3em 0; }
+    .outfits { background: #fff0f6; margin-top: 2em; padding: 1em; border-radius: 8px; box-shadow: 0 2px 8px #e5c1db; }
+    .footer { margin-top: 3em; color: #aaa; font-size: 0.9em; text-align: center; }
+    .checkbox { margin-right: .5em; }
+    button { margin-top: 1.5em; padding: 10px 30px; background: #b85c9e; color: #fff; border: none; border-radius: 5px; font-size: 1em; cursor: pointer; }
+    button:hover { background: #8e4077; }
+    ul { padding-left: 1.2em; }
+    .preview-container { margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .preview-container img { max-height: 80px; border-radius: 5px; border: 1px solid #ccc; }
+    .category-block { margin-bottom: 1.5em; }
+    .fit-good { color: green; font-weight: bold; }
+    .fit-bad { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>👗 DressMeUp: Outfit & Fit Suggester</h1>
+  <p>Enter your wardrobe, upload pictures, and input your measurements to get outfit and fit suggestions!</p>
+
+  <form id="dressmeupForm">
+    <fieldset style="border: 1px solid #ddd; padding: 1em; border-radius: 8px;">
+      <legend><strong>Your Measurements (cm)</strong></legend>
+      <label>Chest:
+        <input type="number" id="measureChest" min="30" max="200" required />
+      </label>
+      <label>Waist:
+        <input type="number" id="measureWaist" min="30" max="200" required />
+      </label>
+      <label>Hips:
+        <input type="number" id="measureHips" min="30" max="200" required />
+      </label>
+    </fieldset>
+
+    <div class="category-block">
+      <label>Tops (comma separated names):
+        <input type="text" id="tops" placeholder="e.g., pink blouse, red t-shirt" />
+      </label>
+      <label>Tops size:
+        <select id="topsSize">
+          <option value="">Select size</option>
+          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
+          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
+        </select>
+      </label>
+      <input type="file" id="topsImages" accept="image/*" multiple />
+      <div id="topsPreview" class="preview-container"></div>
+    </div>
+
+    <div class="category-block">
+      <label>Bottoms (comma separated names):
+        <input type="text" id="bottoms" placeholder="e.g., jeans, skirt" />
+      </label>
+      <label>Bottoms size:
+        <select id="bottomsSize">
+          <option value="">Select size</option>
+          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
+          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
+        </select>
+      </label>
+      <input type="file" id="bottomsImages" accept="image/*" multiple />
+      <div id="bottomsPreview" class="preview-container"></div>
+    </div>
+
+    <div class="category-block">
+      <label>Outerwear (comma separated names):
+        <input type="text" id="outerwear" placeholder="e.g., jacket, cardigan" />
+      </label>
+      <label>Outerwear size:
+        <select id="outerwearSize">
+          <option value="">Select size</option>
+          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
+          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
+        </select>
+      </label>
+      <input type="file" id="outerwearImages" accept="image/*" multiple />
+      <div id="outerwearPreview" class="preview-container"></div>
+    </div>
+
+    <div class="category-block">
+      <label>Shoes (comma separated names):
+        <input type="text" id="shoes" placeholder="e.g., sneakers, boots" />
+      </label>
+      <label>Shoes size:
+        <select id="shoesSize">
+          <option value="">Select size</option>
+          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
+          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
+        </select>
+      </label>
+      <input type="file" id="shoesImages" accept="image/*" multiple />
+      <div id="shoesPreview" class="preview-container"></div>
+    </div>
+
+    <label>
+      <input type="checkbox" class="checkbox" id="useAccessories" checked />
+      Include Accessories
+    </label>
+    <div class="category-block" id="accessoriesBlock">
+      <label>Accessories (comma separated names):
+        <input type="text" id="accessories" placeholder="e.g., scarf, hat" />
+      </label>
+      <input type="file" id="accessoriesImages" accept="image/*" multiple />
+      <div id="accessoriesPreview" class="preview-container"></div>
+    </div>
+
+    <label>
+      Occasion:
+      <select id="occasion">
+        <option value="Any">Any</option>
+        <option value="Casual">Casual</option>
+        <option value="Work/Business">Work/Business</option>
+        <option value="Party">Party</option>
+        <option value="Date">Date</option>
+        <option value="Sporty">Sporty</option>
+        <option value="Formal">Formal</option>
+        <option value="Outdoor">Outdoor</option>
+      </select>
+    </label>
+
+    <label>
+      Number of outfit suggestions:
+      <input type="number" id="numOutfits" min="1" max="10" value="5" />
+    </label>
+
+    <label>
+      <input type="checkbox" class="checkbox" id="randomize" checked />
+      Randomize outfit order
+    </label>
+
+    <br />
+    <button type="submit">Suggest Outfits & Fit</button>
+  </form>
+
+  <div class="outfits" id="outfitResults" style="display:none"></div>
+
+  <div class="footer">
+    Made with ❤️ — DressMeUp (Pure HTML/JS)
+  </div>
+
+  <script>
+    // Utility: parse comma-separated unique trimmed items
+    function parseItems(str) {
+      return Array.from(new Set(str.split(",").map((s) => s.trim()).filter(Boolean)));
+    }
+
+    // Cartesian product of arrays
+    function cartesian(arrays) {
+      return arrays.reduce(
+        (a, b) => a.flatMap((d) => b.map((e) => [...d, e])),
+        [[]]
+      );
+    }
+
+    // Occasion filter (same as before)
+    function occasionFilter(combo, occasion) {
+      if (occasion === "Any") return true;
+      const joined = combo.join(",").toLowerCase();
+      if (occasion === "Formal")
+        return /blazer|suit|dress shoe|heel/.test(joined);
+      if (occasion === "Sporty")
+        return /sneaker|tracksuit|legging|sport/.test(joined);
+      return true;
+    }
+
+    // Basic size chart (cm) for fit check - simplified example
+    // You can expand this with real size charts
+    const sizeChart = {
+      XS: { chest: 80, waist: 65, hips: 85 },
+      S: { chest: 88, waist: 70, hips: 90 },
+      M: { chest: 96, waist: 78, hips: 98 },
+      L: { chest: 104, waist: 86, hips: 106 },
+      XL: { chest: 112, waist: 94, hips: 114 },
+      XXL: { chest: 120, waist: 102, hips: 122 },
+    };
+
+    // Fit check: returns true if user measurements fit in size range (+- 5cm tolerance)
+    function checkFit(user, size) {
+      if (!size || !sizeChart[size]) return null; // no size info
+      const tolerance = 5;
+      const s = sizeChart[size];
+      return (
+        Math.abs(user.chest - s.chest) <= tolerance &&
+        Math.abs(user.waist - s.waist) <= tolerance &&
+        Math.abs(user.hips - s.hips) <= tolerance
+      );
+    }
+
+    // Store images for categories (same as before)
+    const imagesData = {
+      Tops: [],
+      Bottoms: [],
+      Outerwear: [],
+      Shoes: [],
+      Accessories: [],
+    };
+
+    // Preview images for a category (same as before)
+    function previewImages(inputElement, previewContainer, category) {
+      previewContainer.innerHTML = "";
+      imagesData[category] = [];
+      const files = inputElement.files;
+      if (files.length === 0) return;
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          previewContainer.appendChild(img);
+          imagesData[category].push(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Attach change listeners for image inputs
+    [
+      { id: "topsImages", category: "Tops", preview: "topsPreview" },
+      { id: "bottomsImages", category: "Bottoms", preview: "bottomsPreview" },
+      { id: "outerwearImages", category: "Outerwear", preview: "outerwearPreview" },
+      { id: "shoesImages", category: "Shoes", preview: "shoesPreview" },
+      { id: "accessoriesImages", category: "Accessories", preview: "accessoriesPreview" },
+    ].forEach(({ id, category, preview }) => {
+      const inputEl = document.getElementById(id);
+      const previewEl = document.getElementById(preview);
+      inputEl.addEventListener("change", () => previewImages(inputEl, previewEl, category));
+    });
+
+    // Accessories toggle (same as before)
+    function handleAccessoriesToggle() {
+      const accInput = document.getElementById("accessories");
+      const accLabel = document.getElementById("accessoriesBlock");
+      if (document.getElementById("useAccessories").checked) {
+        accInput.disabled = false;
+        accLabel.style.opacity = "1";
+        accLabel.style.pointerEvents = "auto";
+      } else {
+        accInput.disabled = true;
+        accInput.value = "";
+        accLabel.style.opacity = "0.5";
+        accLabel.style.pointerEvents = "none";
+      }
+    }
+    document.getElementById("useAccessories").addEventListener("change", handleAccessoriesToggle);
+    handleAccessoriesToggle();
+
+    // On form submit: generate outfit & fit suggestions
+    document.getElementById("dressmeupForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const resultsDiv = document.getElementById("outfitResults");
+      resultsDiv.style.display = "block";
+      resultsDiv.innerHTML = "";
+
+      // Get user measurements
+      const userMeasurements = {
+        chest: parseInt(document.getElementById("measureChest").value, 10),
+        waist: parseInt(document.getElementById("measureWaist").value, 10),
+        hips: parseInt(document.getElementById("measureHips").value, 10),
+      };
+
+      const getVal = (id) => document.getElementById(id).value;
+      const useAcc = document.getElementById("useAccessories").checked;
+
+      // Parse wardrobe items
+      const wardrobe = {
+        Tops: parseItems(getVal("tops")),
+        Bottoms: parseItems(getVal("bottoms")),
+        Outerwear: parseItems(getVal("outerwear")),
+        Shoes: parseItems(getVal("shoes")),
+      };
+      if (useAcc) wardrobe.Accessories = parseItems(getVal("accessories"));
+
+      // Sizes selected by user
+      const sizes = {
+        Tops: getVal("topsSize"),
+        Bottoms: getVal("bottomsSize"),
+        Outerwear: getVal("outerwearSize"),
+        Shoes: getVal("shoesSize"),
+        Accessories: null, // no size for accessories
+      };
+
+      // Filter out empty categories
+      const avail = Object.entries(wardrobe).filter(([k, v]) => v.length);
+      if (avail.length < 2) {
+        resultsDiv.innerHTML = "<b>Please enter at least two categories with items.</b>";
+        return;
+      }
+
+      const keys = avail.map(([k]) => k);
+      const lists = avail.map(([k, v]) => v);
+      let combos = cartesian(lists);
+
+      const occasion = getVal("occasion");
+      let filtered = combos.filter((combo) => occasionFilter(combo, occasion));
+      if (!filtered.length) filtered = combos; // fallback
+
+      const num = Math.max(1, Math.min(10, parseInt(getVal("numOutfits")) || 5));
+      if (document.getElementById("randomize").checked)
+        filtered = filtered.sort(() => Math.random() - 0.5);
+
+      // Generate HTML for outfit + fit
+      let html = `<h3>Outfit & Fit Suggestions (${Math.min(num, filtered.length)}):</h3><ul>`;
+      filtered.slice(0, num).forEach((combo) => {
+        html += "<li>";
+        combo.forEach((item, idx) => {
+          const cat = keys[idx];
+          const size = sizes[cat];
+          let fitStatus = "";
+          if (cat !== "Accessories" && size) {
+            const fits = checkFit(userMeasurements, size);
+            fitStatus = fits === null ? "" : fits ? `<span class="fit-good"> (Good Fit)</span>` : `<span class="fit-bad"> (Poor Fit)</span>`;
+          }
+          html += `<b>${cat}</b>: ${item}${fitStatus} / `;
+        });
+        html = html.slice(0, -3); // remove last slash
+        html += "</li>";
+      });
+      html += "</ul>";
+      resultsDiv.innerHTML = html;
+    });
+  </script>
+</body>
+</html>
