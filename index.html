@@ -2,329 +2,222 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DressMeUp: Outfit & Fit Suggester</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dress Me Up – Repurpose & Style Your Wardrobe</title>
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#ffeff6',
+            accent: '#bc1b1b',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          },
+        }
+      }
+    }
+  </script>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2em auto; padding: 1em; background: #faf7f3; }
-    h1 { color: #b85c9e; }
-    label { display: block; margin-top: 1em; }
-    input[type="text"], input[type="number"], select { width: 60%; margin: 0.3em 0; }
-    .outfits { background: #fff0f6; margin-top: 2em; padding: 1em; border-radius: 8px; box-shadow: 0 2px 8px #e5c1db; }
-    .footer { margin-top: 3em; color: #aaa; font-size: 0.9em; text-align: center; }
-    .checkbox { margin-right: .5em; }
-    button { margin-top: 1.5em; padding: 10px 30px; background: #b85c9e; color: #fff; border: none; border-radius: 5px; font-size: 1em; cursor: pointer; }
-    button:hover { background: #8e4077; }
-    ul { padding-left: 1.2em; }
-    .preview-container { margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .preview-container img { max-height: 80px; border-radius: 5px; border: 1px solid #ccc; }
-    .category-block { margin-bottom: 1.5em; }
-    .fit-good { color: green; font-weight: bold; }
-    .fit-bad { color: red; font-weight: bold; }
+    html { font-family: 'Inter', sans-serif; }
+    body { background: #ffeff6; }
+    .category-upload input[type="file"] { display: none; }
+    .category-upload label { cursor: pointer; }
+    .outfit-img {
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 16px 0 rgba(0,0,0,0.05);
+    }
+    /* Hide scroll on mobile nav when collapsed */
+    #mobile-menu[aria-hidden="true"] { max-height: 0; overflow: hidden; }
+    #mobile-menu[aria-hidden="false"] { max-height: 300px; }
   </style>
 </head>
-<body>
-  <h1>👗 DressMeUp: Outfit & Fit Suggester</h1>
-  <p>Enter your wardrobe, upload pictures, and input your measurements to get outfit and fit suggestions!</p>
+<body class="min-h-screen bg-primary flex flex-col">
 
-  <form id="dressmeupForm">
-    <fieldset style="border: 1px solid #ddd; padding: 1em; border-radius: 8px;">
-      <legend><strong>Your Measurements (cm)</strong></legend>
-      <label>Chest:
-        <input type="number" id="measureChest" min="30" max="200" required />
-      </label>
-      <label>Waist:
-        <input type="number" id="measureWaist" min="30" max="200" required />
-      </label>
-      <label>Hips:
-        <input type="number" id="measureHips" min="30" max="200" required />
-      </label>
-    </fieldset>
-
-    <div class="category-block">
-      <label>Tops (comma separated names):
-        <input type="text" id="tops" placeholder="e.g., pink blouse, red t-shirt" />
-      </label>
-      <label>Tops size:
-        <select id="topsSize">
-          <option value="">Select size</option>
-          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
-        </select>
-      </label>
-      <input type="file" id="topsImages" accept="image/*" multiple />
-      <div id="topsPreview" class="preview-container"></div>
+  <!-- Header -->
+  <header class="w-full bg-white shadow-sm">
+    <div class="container mx-auto flex justify-between items-center py-5 px-4">
+      <h1 class="text-2xl sm:text-3xl font-bold text-accent tracking-tight">Dress Me Up</h1>
+      <nav class="space-x-6 text-base font-medium hidden md:block">
+        <a href="#repurpose" class="text-gray-600 hover:text-accent transition">Repurpose</a>
+        <a href="#generator" class="text-gray-600 hover:text-accent transition">Outfit Generator</a>
+        <a href="#upload" class="text-gray-600 hover:text-accent transition">Upload</a>
+      </nav>
+      <button class="md:hidden flex items-center p-2" aria-label="Open Menu" onclick="toggleMenu()">
+        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16M4 16h16" />
+        </svg>
+      </button>
     </div>
-
-    <div class="category-block">
-      <label>Bottoms (comma separated names):
-        <input type="text" id="bottoms" placeholder="e.g., jeans, skirt" />
-      </label>
-      <label>Bottoms size:
-        <select id="bottomsSize">
-          <option value="">Select size</option>
-          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
-        </select>
-      </label>
-      <input type="file" id="bottomsImages" accept="image/*" multiple />
-      <div id="bottomsPreview" class="preview-container"></div>
+    <div id="mobile-menu" class="md:hidden bg-white border-t transition-all duration-300 ease-in-out overflow-hidden max-h-0" aria-hidden="true">
+      <nav class="flex flex-col space-y-2 py-2 px-6">
+        <a href="#repurpose" class="text-gray-600 hover:text-accent transition">Repurpose</a>
+        <a href="#generator" class="text-gray-600 hover:text-accent transition">Outfit Generator</a>
+        <a href="#upload" class="text-gray-600 hover:text-accent transition">Upload</a>
+      </nav>
     </div>
+  </header>
 
-    <div class="category-block">
-      <label>Outerwear (comma separated names):
-        <input type="text" id="outerwear" placeholder="e.g., jacket, cardigan" />
-      </label>
-      <label>Outerwear size:
-        <select id="outerwearSize">
-          <option value="">Select size</option>
-          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
-        </select>
-      </label>
-      <input type="file" id="outerwearImages" accept="image/*" multiple />
-      <div id="outerwearPreview" class="preview-container"></div>
+  <!-- Hero Section -->
+  <section class="flex flex-col items-center text-center py-12 px-4 bg-primary">
+    <h2 class="text-4xl sm:text-5xl font-extrabold mb-4 text-accent">Breathe New Life into Your Wardrobe</h2>
+    <p class="max-w-2xl text-lg mb-8 text-gray-700">
+      Dress Me Up helps you repurpose old clothes and create stunning new outfits with the magic of AI. Upload your pieces, mix and match, and get inspired!
+    </p>
+    <a href="#upload" class="inline-block px-8 py-3 bg-accent text-white rounded-lg font-semibold shadow hover:bg-red-700 transition">Get Started</a>
+  </section>
+
+  <!-- Repurpose Feature -->
+  <section id="repurpose" class="container mx-auto py-12 px-4">
+    <div class="flex flex-col md:flex-row items-center gap-10">
+      <div class="md:w-1/2">
+        <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=600&q=80" alt="Repurpose Clothes" class="rounded-xl shadow-md w-full object-cover" loading="lazy">
+      </div>
+      <div class="md:w-1/2">
+        <h3 class="text-3xl font-bold mb-4 text-accent">Repurpose Old Clothes</h3>
+        <p class="text-gray-700 mb-4">
+          Don’t throw away your wardrobe! Discover creative ideas and tutorials to turn tops, bottoms, shoes, and accessories into something brand new.
+        </p>
+        <ul class="list-disc list-inside text-gray-700 space-y-2">
+          <li>DIY upcycling guides</li>
+          <li>Community inspiration</li>
+          <li>Eco-friendly fashion</li>
+        </ul>
+      </div>
     </div>
+  </section>
 
-    <div class="category-block">
-      <label>Shoes (comma separated names):
-        <input type="text" id="shoes" placeholder="e.g., sneakers, boots" />
-      </label>
-      <label>Shoes size:
-        <select id="shoesSize">
-          <option value="">Select size</option>
-          <option value="XS">XS</option><option value="S">S</option><option value="M">M</option>
-          <option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option>
-        </select>
-      </label>
-      <input type="file" id="shoesImages" accept="image/*" multiple />
-      <div id="shoesPreview" class="preview-container"></div>
+  <!-- Outfit Generator -->
+  <section id="generator" class="bg-white py-12 px-4">
+    <div class="container mx-auto flex flex-col items-center">
+      <h3 class="text-3xl font-bold mb-4 text-accent text-center">AI Outfit Generator</h3>
+      <p class="text-gray-700 mb-8 text-center max-w-xl">
+        Upload images of your clothes, and let our AI mix and match them into fresh, stylish outfits. Try uploading tops, bottoms, shoes, and accessories to see the magic!
+      </p>
+      <div id="outfit-preview" class="flex flex-wrap gap-6 justify-center mb-8">
+        <!-- Dynamically filled by JS when outfit is generated -->
+      </div>
+      <button id="generate-btn" class="px-8 py-3 bg-accent text-white rounded-lg font-semibold shadow hover:bg-red-700 transition disabled:opacity-50" disabled>
+        Generate Outfit
+      </button>
     </div>
+  </section>
 
-    <label>
-      <input type="checkbox" class="checkbox" id="useAccessories" checked />
-      Include Accessories
-    </label>
-    <div class="category-block" id="accessoriesBlock">
-      <label>Accessories (comma separated names):
-        <input type="text" id="accessories" placeholder="e.g., scarf, hat" />
-      </label>
-      <input type="file" id="accessoriesImages" accept="image/*" multiple />
-      <div id="accessoriesPreview" class="preview-container"></div>
-    </div>
+  <!-- Upload Section -->
+  <section id="upload" class="container mx-auto py-12 px-4">
+    <h3 class="text-3xl font-bold mb-8 text-accent text-center">Upload Your Clothes</h3>
+    <form id="upload-form" class="grid grid-cols-1 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+      <!-- Categories: Top, Bottom, Shoes, Accessories -->
+      <div class="category-upload flex flex-col items-center bg-white rounded-xl shadow p-6">
+        <span class="font-semibold text-accent mb-3">Top</span>
+        <label class="flex flex-col items-center space-y-2 w-full">
+          <span class="w-20 h-20 flex items-center justify-center bg-primary rounded-full border-2 border-accent text-accent">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          </span>
+          <input type="file" accept="image/*" name="top" id="top-input" />
+          <span id="top-preview" class="text-xs text-gray-500 text-center"></span>
+        </label>
+      </div>
+      <div class="category-upload flex flex-col items-center bg-white rounded-xl shadow p-6">
+        <span class="font-semibold text-accent mb-3">Bottom</span>
+        <label class="flex flex-col items-center space-y-2 w-full">
+          <span class="w-20 h-20 flex items-center justify-center bg-primary rounded-full border-2 border-accent text-accent">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          </span>
+          <input type="file" accept="image/*" name="bottom" id="bottom-input" />
+          <span id="bottom-preview" class="text-xs text-gray-500 text-center"></span>
+        </label>
+      </div>
+      <div class="category-upload flex flex-col items-center bg-white rounded-xl shadow p-6">
+        <span class="font-semibold text-accent mb-3">Shoes</span>
+        <label class="flex flex-col items-center space-y-2 w-full">
+          <span class="w-20 h-20 flex items-center justify-center bg-primary rounded-full border-2 border-accent text-accent">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          </span>
+          <input type="file" accept="image/*" name="shoes" id="shoes-input" />
+          <span id="shoes-preview" class="text-xs text-gray-500 text-center"></span>
+        </label>
+      </div>
+      <div class="category-upload flex flex-col items-center bg-white rounded-xl shadow p-6">
+        <span class="font-semibold text-accent mb-3">Accessories</span>
+        <label class="flex flex-col items-center space-y-2 w-full">
+          <span class="w-20 h-20 flex items-center justify-center bg-primary rounded-full border-2 border-accent text-accent">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          </span>
+          <input type="file" accept="image/*" name="accessories" id="accessories-input" />
+          <span id="accessories-preview" class="text-xs text-gray-500 text-center"></span>
+        </label>
+      </div>
+    </form>
+  </section>
 
-    <label>
-      Occasion:
-      <select id="occasion">
-        <option value="Any">Any</option>
-        <option value="Casual">Casual</option>
-        <option value="Work/Business">Work/Business</option>
-        <option value="Party">Party</option>
-        <option value="Date">Date</option>
-        <option value="Sporty">Sporty</option>
-        <option value="Formal">Formal</option>
-        <option value="Outdoor">Outdoor</option>
-      </select>
-    </label>
+  <!-- Footer -->
+  <footer class="mt-auto bg-white text-gray-600 py-6 text-center text-sm border-t">
+    © 2025 Dress Me Up. All rights reserved.
+  </footer>
 
-    <label>
-      Number of outfit suggestions:
-      <input type="number" id="numOutfits" min="1" max="10" value="5" />
-    </label>
-
-    <label>
-      <input type="checkbox" class="checkbox" id="randomize" checked />
-      Randomize outfit order
-    </label>
-
-    <br />
-    <button type="submit">Suggest Outfits & Fit</button>
-  </form>
-
-  <div class="outfits" id="outfitResults" style="display:none"></div>
-
-  <div class="footer">
-    Made with ❤️ — DressMeUp (Pure HTML/JS)
-  </div>
-
+  <!-- Scripts -->
   <script>
-    // Utility: parse comma-separated unique trimmed items
-    function parseItems(str) {
-      return Array.from(new Set(str.split(",").map((s) => s.trim()).filter(Boolean)));
+    // Responsive mobile nav toggle
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const expanded = menu.getAttribute('aria-hidden') === 'false';
+      menu.setAttribute('aria-hidden', expanded ? 'true' : 'false');
     }
 
-    // Cartesian product of arrays
-    function cartesian(arrays) {
-      return arrays.reduce(
-        (a, b) => a.flatMap((d) => b.map((e) => [...d, e])),
-        [[]]
-      );
-    }
-
-    // Occasion filter (same as before)
-    function occasionFilter(combo, occasion) {
-      if (occasion === "Any") return true;
-      const joined = combo.join(",").toLowerCase();
-      if (occasion === "Formal")
-        return /blazer|suit|dress shoe|heel/.test(joined);
-      if (occasion === "Sporty")
-        return /sneaker|tracksuit|legging|sport/.test(joined);
-      return true;
-    }
-
-    // Basic size chart (cm) for fit check - simplified example
-    // You can expand this with real size charts
-    const sizeChart = {
-      XS: { chest: 80, waist: 65, hips: 85 },
-      S: { chest: 88, waist: 70, hips: 90 },
-      M: { chest: 96, waist: 78, hips: 98 },
-      L: { chest: 104, waist: 86, hips: 106 },
-      XL: { chest: 112, waist: 94, hips: 114 },
-      XXL: { chest: 120, waist: 102, hips: 122 },
-    };
-
-    // Fit check: returns true if user measurements fit in size range (+- 5cm tolerance)
-    function checkFit(user, size) {
-      if (!size || !sizeChart[size]) return null; // no size info
-      const tolerance = 5;
-      const s = sizeChart[size];
-      return (
-        Math.abs(user.chest - s.chest) <= tolerance &&
-        Math.abs(user.waist - s.waist) <= tolerance &&
-        Math.abs(user.hips - s.hips) <= tolerance
-      );
-    }
-
-    // Store images for categories (same as before)
-    const imagesData = {
-      Tops: [],
-      Bottoms: [],
-      Outerwear: [],
-      Shoes: [],
-      Accessories: [],
-    };
-
-    // Preview images for a category (same as before)
-    function previewImages(inputElement, previewContainer, category) {
-      previewContainer.innerHTML = "";
-      imagesData[category] = [];
-      const files = inputElement.files;
-      if (files.length === 0) return;
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const img = document.createElement("img");
-          img.src = e.target.result;
-          previewContainer.appendChild(img);
-          imagesData[category].push(e.target.result);
-        };
-        reader.readAsDataURL(file);
+    // Live preview for file uploads
+    const categories = ['top', 'bottom', 'shoes', 'accessories'];
+    categories.forEach(cat => {
+      const input = document.getElementById(cat + '-input');
+      const preview = document.getElementById(cat + '-preview');
+      input.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          preview.textContent = this.files[0].name;
+        } else {
+          preview.textContent = '';
+        }
+        updateGeneratorButton();
       });
-    }
-
-    // Attach change listeners for image inputs
-    [
-      { id: "topsImages", category: "Tops", preview: "topsPreview" },
-      { id: "bottomsImages", category: "Bottoms", preview: "bottomsPreview" },
-      { id: "outerwearImages", category: "Outerwear", preview: "outerwearPreview" },
-      { id: "shoesImages", category: "Shoes", preview: "shoesPreview" },
-      { id: "accessoriesImages", category: "Accessories", preview: "accessoriesPreview" },
-    ].forEach(({ id, category, preview }) => {
-      const inputEl = document.getElementById(id);
-      const previewEl = document.getElementById(preview);
-      inputEl.addEventListener("change", () => previewImages(inputEl, previewEl, category));
     });
 
-    // Accessories toggle (same as before)
-    function handleAccessoriesToggle() {
-      const accInput = document.getElementById("accessories");
-      const accLabel = document.getElementById("accessoriesBlock");
-      if (document.getElementById("useAccessories").checked) {
-        accInput.disabled = false;
-        accLabel.style.opacity = "1";
-        accLabel.style.pointerEvents = "auto";
-      } else {
-        accInput.disabled = true;
-        accInput.value = "";
-        accLabel.style.opacity = "0.5";
-        accLabel.style.pointerEvents = "none";
-      }
+    // Enable generator button if any file is uploaded
+    function updateGeneratorButton() {
+      const anyUploaded = categories.some(cat =>
+        document.getElementById(cat + '-input').files.length > 0
+      );
+      document.getElementById('generate-btn').disabled = !anyUploaded;
     }
-    document.getElementById("useAccessories").addEventListener("change", handleAccessoriesToggle);
-    handleAccessoriesToggle();
 
-    // On form submit: generate outfit & fit suggestions
-    document.getElementById("dressmeupForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const resultsDiv = document.getElementById("outfitResults");
-      resultsDiv.style.display = "block";
-      resultsDiv.innerHTML = "";
-
-      // Get user measurements
-      const userMeasurements = {
-        chest: parseInt(document.getElementById("measureChest").value, 10),
-        waist: parseInt(document.getElementById("measureWaist").value, 10),
-        hips: parseInt(document.getElementById("measureHips").value, 10),
-      };
-
-      const getVal = (id) => document.getElementById(id).value;
-      const useAcc = document.getElementById("useAccessories").checked;
-
-      // Parse wardrobe items
-      const wardrobe = {
-        Tops: parseItems(getVal("tops")),
-        Bottoms: parseItems(getVal("bottoms")),
-        Outerwear: parseItems(getVal("outerwear")),
-        Shoes: parseItems(getVal("shoes")),
-      };
-      if (useAcc) wardrobe.Accessories = parseItems(getVal("accessories"));
-
-      // Sizes selected by user
-      const sizes = {
-        Tops: getVal("topsSize"),
-        Bottoms: getVal("bottomsSize"),
-        Outerwear: getVal("outerwearSize"),
-        Shoes: getVal("shoesSize"),
-        Accessories: null, // no size for accessories
-      };
-
-      // Filter out empty categories
-      const avail = Object.entries(wardrobe).filter(([k, v]) => v.length);
-      if (avail.length < 2) {
-        resultsDiv.innerHTML = "<b>Please enter at least two categories with items.</b>";
-        return;
-      }
-
-      const keys = avail.map(([k]) => k);
-      const lists = avail.map(([k, v]) => v);
-      let combos = cartesian(lists);
-
-      const occasion = getVal("occasion");
-      let filtered = combos.filter((combo) => occasionFilter(combo, occasion));
-      if (!filtered.length) filtered = combos; // fallback
-
-      const num = Math.max(1, Math.min(10, parseInt(getVal("numOutfits")) || 5));
-      if (document.getElementById("randomize").checked)
-        filtered = filtered.sort(() => Math.random() - 0.5);
-
-      // Generate HTML for outfit + fit
-      let html = `<h3>Outfit & Fit Suggestions (${Math.min(num, filtered.length)}):</h3><ul>`;
-      filtered.slice(0, num).forEach((combo) => {
-        html += "<li>";
-        combo.forEach((item, idx) => {
-          const cat = keys[idx];
-          const size = sizes[cat];
-          let fitStatus = "";
-          if (cat !== "Accessories" && size) {
-            const fits = checkFit(userMeasurements, size);
-            fitStatus = fits === null ? "" : fits ? `<span class="fit-good"> (Good Fit)</span>` : `<span class="fit-bad"> (Poor Fit)</span>`;
-          }
-          html += `<b>${cat}</b>: ${item}${fitStatus} / `;
-        });
-        html = html.slice(0, -3); // remove last slash
-        html += "</li>";
+    // "Generate Outfit" button mockup
+    document.getElementById('generate-btn').addEventListener('click', function() {
+      const outfitPreview = document.getElementById('outfit-preview');
+      outfitPreview.innerHTML = '';
+      categories.forEach(cat => {
+        const input = document.getElementById(cat + '-input');
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = cat + ' preview';
+            img.className = 'outfit-img w-24 h-24 object-cover bg-primary border-2 border-accent';
+            const caption = document.createElement('div');
+            caption.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+            caption.className = 'mt-2 text-xs text-accent text-center';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex flex-col items-center';
+            wrapper.appendChild(img);
+            wrapper.appendChild(caption);
+            outfitPreview.appendChild(wrapper);
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
       });
-      html += "</ul>";
-      resultsDiv.innerHTML = html;
     });
   </script>
 </body>
